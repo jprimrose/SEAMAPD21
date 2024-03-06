@@ -11,6 +11,52 @@ SEAMAPD21 was created to enable fishery scientists and researchers to process ra
 cat SEAMAPD21.tar.gz* | tar xzvf -
 ```
 
+#### CSV Files
+
+The CSV files are **[VIAME](https://www.viametoolkit.org/) CSV** files: system default comma separated value [detection file format](https://viame.readthedocs.io/en/latest/section_links/detection_file_conversions.html). Summarizing the [docs](https://viame.readthedocs.io/en/latest/section_links/detection_file_conversions.html#integrated-detection-formats):
+
+There are 3 parts to a VIAME csv. First, 9 required fields, comma seperated, with a single line for either each detection, or each detection state, in a track:
+
+| Column | Contents | Description |
+|--------|----------|-------------|
+| 1: | Detection or Track Unique ID | Can be used to link detections from multiple frames onto tracks |
+| 2: | Video or Image String Identifier | Video timestamp or an image filename |
+| 3: | Unique Frame Integer Identifier | Unique 0-based frame identifier for the frame in the given video or loaded sequence |
+| 4: | TL-x | Top left *x* coordinate of the target bounding box in the imagery (top left of the image is the origin: 0,0) |
+| 5: | TL-y | Top left *y* coordinate of the target bounding box in the imagery |
+| 6: | BR-x | Bottom right *x* coordinate of the target bounding box in the imagery |
+| 7: | BR-y | Bottom right *y* coordinate of the target bounding box in the imagery |
+| 8: | Auxiliary Confidence  | Context-dependent (image or video): How likely this detection is an object, or the confidence in the length measurement, if present |
+| 9: | Target Length | If not present, specified with a value less than 0, most commonly “-1”|
+
+Detections can be linked onto tracks on multiple frames via sharing the same track ID field. Next, a sequence of optional species <=> score pairs, also comma seperated:
+
+| Column | Contents | Description |
+|--------|----------|-------------|
+| 10: |  Class-name, object 1 |  Optional species ID |
+| 11: |  Score, object 1 |  Optional species score |
+
+There can be as many class, score pairs as necessary (*e.g.*, fields 12 and 13, 14 and 15, *etc.*) In the case of tracks, which may span multiple lines and thus have multiple probabilities per line, the probabilities from the last state in the track should be treated as the aggregate probability for the track and it’s okay for prior states to have no probability to prevent respecifying it. In the
+class and score list, the highest scoring entries should typically be listed first.
+
+Lastly, optional categorical values associated with each detection in the file
+after species/class pairs. Attributes are given via a keyword followed by any
+space seperate values the attribute may have. Possible attributes are:
+
+| Attribute | Possible Values | Description |
+|-----------|-----------------|---|
+| (kp) | head 120 320 | Optional head, tail, or arbitrary keypoints |
+| (atr) | is_diseased true | Attribute keyword then boolean or numeric value |
+| (note) | this is a note | Notes take no form just can’t have commas |
+| (poly) | 12 455 40 515 25 480 | A polygon for the detection |
+| (hole) | 38 485 39 490 37 470 | A hole in a polygon for a detection |
+| (mask) | ./masks/mask02393.png | A reference to an external pixel mask image |
+
+Throwing together all of these components, an example line might look like:
+
+    1,image.png,0,104,265,189,390,0.32,1.5,flounder,0.32,(kp) head 120 320
+
+This file format is supported by most GUIs and detector training tools. It can be used via specifying the "viame_csv" keyword in any readers or writers.
 
 ### Data Downloads
 |  Download           | Size       | MD5                              |
